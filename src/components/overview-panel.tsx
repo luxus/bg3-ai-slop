@@ -26,44 +26,45 @@ export function OverviewPanel({ onNavigate }: Props) {
   return (
     <div className="space-y-6">
       <section className="rounded-[var(--radius-xl)] border border-[var(--color-border)] bg-[var(--color-surface)] p-5 space-y-3">
-        <p className="text-xs font-medium uppercase tracking-wide text-[var(--color-primary)]">
-          Smooth dark run
-        </p>
-        <h2 className="text-xl font-semibold tracking-tight">
-          {ROUTE_INTRO.title}
-        </h2>
+        <h2 className="text-xl font-semibold tracking-tight">How to use this app</h2>
         <p className="text-sm text-[var(--color-muted)] leading-relaxed">
-          {ROUTE_INTRO.body}
+          <strong className="text-[var(--color-fg)]">Route</strong> is the only
+          walkthrough. <strong className="text-[var(--color-fg)]">Where</strong>{" "}
+          is the same by map.{" "}
+          <strong className="text-[var(--color-fg)]">Party</strong> = builds +
+          level-ups (pick a face).{" "}
+          <strong className="text-[var(--color-fg)]">Fights</strong> = boss
+          scripts with spell chips. Buy / Camp / Loot are manuals.
         </p>
         <DualProgress donePct={stats.donePct} skipPct={stats.skipPct} />
         <p className="text-sm text-[var(--color-muted)] tabular">
-          {stats.doneN} / {stats.total} on the main route
+          {stats.doneN} / {stats.total} route steps
         </p>
-        <Button className="w-full sm:w-auto" onClick={() => onNavigate("route")}>
-          Open the route →
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          <Button onClick={() => onNavigate("route")}>Route →</Button>
+          <Button variant="secondary" onClick={() => onNavigate("party")}>
+            Party
+          </Button>
+          <Button variant="secondary" onClick={() => onNavigate("fights")}>
+            Fights
+          </Button>
+        </div>
       </section>
 
       {next ? (
         <section className="rounded-[var(--radius-xl)] border-2 border-[var(--color-primary)] bg-[var(--color-accent-soft)] p-5 space-y-2">
           <p className="text-xs font-medium uppercase tracking-wide text-[var(--color-primary)]">
-            Next step
+            Next
           </p>
           <h3 className="text-lg font-semibold">{next.do}</h3>
-          <p className="text-sm text-[var(--color-muted)] leading-relaxed">
-            {next.detail}
-          </p>
-          <Button size="sm" onClick={() => onNavigate("route")}>
-            Continue on Route
-          </Button>
+          <p className="text-sm text-[var(--color-muted)]">{next.detail}</p>
         </section>
       ) : null}
 
       <section className="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-elevated)] p-4 space-y-2 text-sm text-[var(--color-muted)]">
         <p>
-          <span className="font-medium text-[var(--color-fg)]">You: </span>
-          {CREATE_CHARACTER.origin} · {CREATE_CHARACTER.subrace} ·{" "}
-          {CREATE_CHARACTER.class} {CREATE_CHARACTER.subclass}
+          <span className="font-medium text-[var(--color-fg)]">Build: </span>
+          {CREATE_CHARACTER.origin} · {CREATE_CHARACTER.subrace} · Hexblade
         </p>
         <p>
           <span className="font-medium text-[var(--color-fg)]">Party: </span>
@@ -72,32 +73,6 @@ export function OverviewPanel({ onNavigate }: Props) {
         <p>
           <span className="font-medium text-[var(--color-fg)]">Combat: </span>
           {ROUTE_INTRO.combat}
-        </p>
-      </section>
-
-      <section className="space-y-2">
-        <p className="text-xs uppercase tracking-wide text-[var(--color-subtle)]">
-          Only if you need them
-        </p>
-        <div className="flex flex-wrap gap-2">
-          <Button size="sm" variant="secondary" onClick={() => onNavigate("levels")}>
-            Level details
-          </Button>
-          <Button size="sm" variant="secondary" onClick={() => onNavigate("vendors")}>
-            Shop list
-          </Button>
-          <Button size="sm" variant="secondary" onClick={() => onNavigate("party")}>
-            Party cards
-          </Button>
-          <Button size="sm" variant="secondary" onClick={() => onNavigate("side")}>
-            Extra sides
-          </Button>
-          <Button size="sm" variant="secondary" onClick={() => onNavigate("camp")}>
-            Camp / Withers
-          </Button>
-        </div>
-        <p className="text-xs text-[var(--color-subtle)]">
-          Ignore these while following Route. They’re backup when stuck.
         </p>
       </section>
 

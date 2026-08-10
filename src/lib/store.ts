@@ -1,10 +1,21 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import {
+  type ActiveSession,
+  type SavedSession,
+  type SessionCounts,
+  type SessionLap,
+  countDone,
+  deltaCounts,
+  emptyCounts,
+  sessionElapsedMs,
+  uid,
+} from "@/lib/session-stats";
 
 export type CheckStatus = "open" | "done" | "skipped";
 
 export type ProgressSnapshot = {
-  version: 3;
+  version: 4;
   quests: Record<string, boolean>;
   questsSkip: Record<string, boolean>;
   items: Record<string, boolean>;
@@ -23,9 +34,13 @@ export type ProgressSnapshot = {
   approvalSkip: Record<string, boolean>;
   notes: Record<string, string>;
   longRests: number;
+  /** @deprecated use activeSession */
   sessionStartedAt: number | null;
+  /** @deprecated removed UI */
   compactMode: boolean;
   actFilter: 0 | 1 | 2 | 3;
+  activeSession: ActiveSession | null;
+  sessionHistory: SavedSession[];
 };
 
 type ProgressState = ProgressSnapshot & {
@@ -49,16 +64,23 @@ type ProgressState = ProgressSnapshot & {
   incLongRest: () => void;
   decLongRest: () => void;
   startSession: () => void;
+  pauseSession: () => void;
+  resumeSession: () => void;
+  lapSession: () => void;
+  endSession: () => void;
   clearSession: () => void;
+  clearSessionHistory: () => void;
   setCompactMode: (v: boolean) => void;
   resetAll: () => void;
   setActFilter: (act: 0 | 1 | 2 | 3) => void;
   exportSnapshot: () => ProgressSnapshot;
   importSnapshot: (data: Partial<ProgressSnapshot>) => void;
+  /** Live counts for UI */
+  currentCounts: () => SessionCounts;
 };
 
 const EMPTY: ProgressSnapshot = {
-  version: 3,
+  version: 4,
   quests: {},
   questsSkip: {},
   items: {},
@@ -80,7 +102,23 @@ const EMPTY: ProgressSnapshot = {
   sessionStartedAt: null,
   compactMode: false,
   actFilter: 0,
+  activeSession: null,
+  sessionHistory: [],
 };
+
+function snapshotCounts(s: {
+  items: Record<string, boolean>;
+  walk: Record<string, boolean>;
+  levels: Record<string, boolean>;
+  longRests: number;
+}): SessionCounts {
+  return {
+    items: countDone(s.items),
+    walk: countDone(s.walk),
+    levels: countDone(s.levels),
+    longRests: s.longRests,
+  };
+}
 
 function statusOf(
   done: Record<string, boolean>,
@@ -166,6 +204,7 @@ export const useProgress = create<ProgressState>()(
   persist(
     (set, get) => ({
       ...EMPTY,
+      currentCounts: () => snapshotCounts(get()),
       toggleQuest: (id) => set(pairToggle("quests", "questsSkip", id)),
       skipQuest: (id) => set(pairSkip("quests", "questsSkip", id)),
       toggleItem: (id) => set(pairToggle("items", "itemsSkip", id)),
@@ -192,19 +231,128 @@ export const useProgress = create<ProgressState>()(
       incLongRest: () => set((s) => ({ longRests: s.longRests + 1 })),
       decLongRest: () =>
         set((s) => ({ longRests: Math.max(0, s.longRests - 1) })),
-      startSession: () => set({ sessionStartedAt: Date.now() }),
-      clearSession: () => set({ sessionStartedAt: null }),
+
+      startSession: () => {
+        const s = get();
+        const now = Date.now();
+        const counts = snapshotCounts(s);
+        const active: ActiveSession = {
+          id: uid(),
+          startedAt: now,
+          pausedAt: null,
+          pauseAccumMs: 0,
+          lapStartedAt: now,
+          baseline: counts,
+          lapBaseline: counts,
+          laps: [],
+        };
+        set({
+          activeSession: active,
+          sessionStartedAt: now,
+        });
+      },
+
+      pauseSession: () =>
+        set((s) => {
+          if (!s.activeSession || s.activeSession.pausedAt) return s;
+          return {
+            activeSession: {
+              ...s.activeSession,
+              pausedAt: Date.now(),
+            },
+          };
+        }),
+
+      resumeSession: () =>
+        set((s) => {
+          const a = s.activeSession;
+          if (!a?.pausedAt) return s;
+          const pausedFor = Date.now() - a.pausedAt;
+          return {
+            activeSession: {
+              ...a,
+              pausedAt: null,
+              pauseAccumMs: a.pauseAccumMs + pausedFor,
+              // shift lap start so lap clock freezes during pause
+              lapStartedAt: a.lapStartedAt + pausedFor,
+            },
+          };
+        }),
+
+      lapSession: () =>
+        set((s) => {
+          const a = s.activeSession;
+          if (!a) return s;
+          const now = Date.now();
+          const counts = snapshotCounts(s);
+          const lap: SessionLap = {
+            id: uid(),
+            index: a.laps.length + 1,
+            startedAt: a.lapStartedAt,
+            endedAt: now,
+            durationMs: Math.max(0, (a.pausedAt ?? now) - a.lapStartedAt),
+            gained: deltaCounts(a.lapBaseline, counts),
+          };
+          return {
+            activeSession: {
+              ...a,
+              laps: [...a.laps, lap],
+              lapStartedAt: now,
+              lapBaseline: counts,
+            },
+          };
+        }),
+
+      endSession: () =>
+        set((s) => {
+          const a = s.activeSession;
+          if (!a) return s;
+          const now = Date.now();
+          const counts = snapshotCounts(s);
+          // close open lap
+          const finalLap: SessionLap = {
+            id: uid(),
+            index: a.laps.length + 1,
+            startedAt: a.lapStartedAt,
+            endedAt: now,
+            durationMs: Math.max(0, (a.pausedAt ?? now) - a.lapStartedAt),
+            gained: deltaCounts(a.lapBaseline, counts),
+          };
+          const laps = [...a.laps, finalLap];
+          const saved: SavedSession = {
+            id: a.id,
+            startedAt: a.startedAt,
+            endedAt: now,
+            durationMs: sessionElapsedMs(
+              { ...a, pausedAt: a.pausedAt ?? now },
+              now,
+            ),
+            gained: deltaCounts(a.baseline, counts),
+            laps,
+          };
+          return {
+            activeSession: null,
+            sessionStartedAt: null,
+            sessionHistory: [saved, ...s.sessionHistory].slice(0, 30),
+          };
+        }),
+
+      clearSession: () =>
+        set({ activeSession: null, sessionStartedAt: null }),
+
+      clearSessionHistory: () => set({ sessionHistory: [] }),
+
       setCompactMode: (v) => set({ compactMode: v }),
       resetAll: () =>
         set({
           ...EMPTY,
-          compactMode: get().compactMode,
+          sessionHistory: get().sessionHistory,
         }),
       setActFilter: (act) => set({ actFilter: act }),
       exportSnapshot: () => {
         const s = get();
         return {
-          version: 3,
+          version: 4,
           quests: s.quests,
           questsSkip: s.questsSkip,
           items: s.items,
@@ -226,6 +374,8 @@ export const useProgress = create<ProgressState>()(
           sessionStartedAt: s.sessionStartedAt,
           compactMode: s.compactMode,
           actFilter: s.actFilter,
+          activeSession: s.activeSession,
+          sessionHistory: s.sessionHistory,
         };
       },
       importSnapshot: (data) =>
@@ -233,11 +383,25 @@ export const useProgress = create<ProgressState>()(
           ...s,
           ...EMPTY,
           ...data,
-          version: 3,
-          compactMode: data.compactMode ?? s.compactMode,
+          version: 4,
+          activeSession: data.activeSession ?? null,
+          sessionHistory: data.sessionHistory ?? s.sessionHistory ?? [],
         })),
     }),
-    { name: "bg3-dark-run-progress", version: 3 },
+    {
+      name: "bg3-dark-run-progress",
+      version: 4,
+      migrate: (persisted) => {
+        const p = (persisted ?? {}) as Partial<ProgressSnapshot>;
+        return {
+          ...EMPTY,
+          ...p,
+          version: 4,
+          activeSession: p.activeSession ?? null,
+          sessionHistory: p.sessionHistory ?? [],
+        };
+      },
+    },
   ),
 );
 

@@ -32,6 +32,7 @@ import {
 export function SyncPanel() {
   const exportSnapshot = useProgress((s) => s.exportSnapshot);
   const importSnapshot = useProgress((s) => s.importSnapshot);
+  const resetAll = useProgress((s) => s.resetAll);
   const { user, isPending } = useCurrentUserState();
 
   const [tokenInput, setTokenInput] = useState("");
@@ -164,7 +165,7 @@ export function SyncPanel() {
     setStatus("");
     try {
       const payload = {
-        version: 3,
+        version: 4,
         exportedAt: new Date().toISOString(),
         data: exportSnapshot() as unknown as Record<string, unknown>,
       };
@@ -203,7 +204,7 @@ export function SyncPanel() {
       [
         JSON.stringify(
           {
-            version: 3,
+            version: 4,
             exportedAt: new Date().toISOString(),
             data: exportSnapshot(),
           },
@@ -437,6 +438,26 @@ export function SyncPanel() {
         />
         <Button size="sm" variant="secondary" onClick={applyImport}>
           Import JSON
+        </Button>
+      </section>
+
+
+      <section className="rounded-[var(--radius-xl)] border border-[var(--color-border)] bg-[var(--color-surface)] p-5 space-y-3">
+        <h3 className="font-medium">Reset progress</h3>
+        <p className="text-sm text-[var(--color-muted)]">
+          Clears checklist marks. Session history is kept.
+        </p>
+        <Button
+          size="sm"
+          variant="secondary"
+          onClick={() => {
+            if (confirm("Reset all checklist progress?")) {
+              resetAll();
+              setStatus("Progress reset.");
+            }
+          }}
+        >
+          Reset all progress
         </Button>
       </section>
 

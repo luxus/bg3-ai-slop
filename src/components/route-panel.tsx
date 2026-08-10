@@ -1,9 +1,8 @@
 import { ROUTE, ROUTE_INTRO } from "@/lib/data/route";
 import { useProgress, getStatus, countProgress } from "@/lib/store";
-import { CheckRow } from "@/components/check-row";
 import { DualProgress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import { RouteStepRow } from "@/components/route-step-row";
 import { useMemo, useState } from "react";
 
 export function RoutePanel() {
@@ -61,6 +60,14 @@ export function RoutePanel() {
           <p className="text-sm text-[var(--color-muted)] leading-relaxed">
             {nextOpen.detail}
           </p>
+          <a
+            href={nextOpen.sourceUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="text-xs text-[var(--color-primary)] underline-offset-2 hover:underline"
+          >
+            {nextOpen.source}
+          </a>
           <div className="flex flex-wrap gap-2 pt-1">
             <Button size="sm" onClick={() => toggleWalk(nextOpen.id)}>
               Mark done
@@ -76,10 +83,7 @@ export function RoutePanel() {
         </section>
       ) : (
         <section className="rounded-[var(--radius-xl)] border border-[var(--color-border)] bg-[var(--color-surface)] p-5">
-          <p className="font-medium">Route complete for this filter 🎉</p>
-          <p className="text-sm text-[var(--color-muted)] mt-1">
-            Or show finished steps / switch act.
-          </p>
+          <p className="font-medium">All required steps done for this filter.</p>
         </section>
       )}
 
@@ -123,35 +127,14 @@ export function RoutePanel() {
               <h3 className="text-sm font-medium text-[var(--color-fg)]">
                 {chapter}
               </h3>
-              {steps.map((s, i) => {
+              {steps.map((s) => {
                 const n = ROUTE.findIndex((x) => x.id === s.id) + 1;
-                return (
-                  <CheckRow
-                    key={s.id}
-                    id={`route-${s.id}`}
-                    status={getStatus(walk, walkSkip, s.id)}
-                    onToggle={() => toggleWalk(s.id)}
-                    onSkip={() => skipWalk(s.id)}
-                    title={`${n}. ${s.do}`}
-                    subtitle={s.detail}
-                    badges={[
-                      ...(s.optional
-                        ? [{ label: "Optional", variant: "secondary" as const }]
-                        : [{ label: "Do it", variant: "danger" as const }]),
-                      { label: `Act ${s.act}`, variant: "outline" as const },
-                    ]}
-                  />
-                );
+                return <RouteStepRow key={s.id} step={s} index={n} />;
               })}
             </section>
           );
         })}
       </div>
-
-      <p className="text-xs text-[var(--color-subtle)] leading-relaxed">
-        Levels / Buy / Sides tabs are reference only. If you’re overwhelmed,
-        ignore them and stay on this list.
-      </p>
     </div>
   );
 }

@@ -174,6 +174,6 @@ export const SOFT_RECS = [
   {
     id: "s-party",
     topic: "Companion subclasses",
-    note: "Death Domain SH, Swashbuckler Astarion, Giant Barb/Oathbreaker Minthara are build preferences for Balanced dark run — not the only viable options.",
+    note: "Death Domain SH, Thief Astarion (dual HX + Sharpshooter), Oathbreaker Minthara are build preferences for this Balanced dark run — not the only viable options.",
   },
 ];
