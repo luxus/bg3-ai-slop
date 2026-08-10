@@ -1,72 +1,75 @@
-import { COMBAT_TIPS, OPENER_ROTATION } from "@/lib/data/combat";
+import { COMBAT_TIPS, OPENERS } from "@/lib/data/combat";
 import { Badge } from "@/components/ui/badge";
-import { Zap } from "lucide-react";
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
 
 export function CombatPanel() {
+  const [kind, setKind] = useState<string>("all");
+  const tips =
+    kind === "all"
+      ? COMBAT_TIPS
+      : COMBAT_TIPS.filter((t) => t.kind === kind || t.kind === "general");
+
   return (
     <div className="space-y-6">
       <header className="space-y-2">
-        <h2 className="text-xl font-semibold tracking-tight">Rush combat</h2>
-        <p className="text-sm text-[var(--color-muted)] max-w-2xl">
-          Default difficulty melts if you open with control and focus fire.
-          Use this as your mental checklist before tough fights.
+        <h2 className="text-xl font-semibold tracking-tight">Combat rush</h2>
+        <p className="text-sm text-[var(--color-muted)]">
+          Openers + fight-type scripts. Soft playstyle tips.
         </p>
+        <div className="flex flex-wrap gap-2 pt-1">
+          {["all", "trash", "boss", "undead", "construct"].map((k) => (
+            <Button
+              key={k}
+              size="sm"
+              variant={kind === k ? "default" : "secondary"}
+              onClick={() => setKind(k)}
+            >
+              {k}
+            </Button>
+          ))}
+        </div>
       </header>
 
-      <section className="rounded-[var(--radius-xl)] border border-[var(--color-border)] bg-[var(--color-surface)] p-5">
-        <div className="flex items-center gap-2 mb-4">
-          <span className="flex h-9 w-9 items-center justify-center rounded-[var(--radius-sm)] bg-[var(--color-accent-soft)] text-[var(--color-primary)]">
-            <Zap className="h-4 w-4" />
-          </span>
-          <div>
-            <h3 className="font-semibold">Standard opener</h3>
-            <p className="text-xs text-[var(--color-muted)]">
-              First round — most packs die here
-            </p>
-          </div>
-        </div>
-        <ol className="space-y-3">
-          {OPENER_ROTATION.map((s) => (
-            <li
-              key={s.step}
-              className="flex gap-3 text-sm border-b border-[var(--color-border)] last:border-0 pb-3 last:pb-0"
+      <section className="space-y-3">
+        <h3 className="text-sm font-medium text-[var(--color-muted)] uppercase tracking-wide">
+          Party openers
+        </h3>
+        <div className="grid gap-3 sm:grid-cols-2">
+          {OPENERS.map((o) => (
+            <div
+              key={o.who}
+              className="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface)] p-4"
             >
-              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[var(--color-elevated)] text-xs font-semibold tabular text-[var(--color-fg)]">
-                {s.step}
-              </span>
-              <div>
-                <p className="font-medium text-[var(--color-fg)]">{s.actor}</p>
-                <p className="text-[var(--color-muted)] leading-relaxed">
-                  {s.action}
-                </p>
-              </div>
-            </li>
+              <p className="font-medium text-[var(--color-fg)]">{o.who}</p>
+              <ol className="mt-2 list-decimal list-inside text-sm text-[var(--color-muted)] space-y-1">
+                {o.steps.map((s) => (
+                  <li key={s}>{s}</li>
+                ))}
+              </ol>
+            </div>
           ))}
-        </ol>
+        </div>
       </section>
 
-      <div className="grid gap-3 sm:grid-cols-2">
-        {COMBAT_TIPS.map((t) => (
-          <article
+      <section className="space-y-2">
+        {tips.map((t) => (
+          <div
             key={t.id}
-            className="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface)] p-4 space-y-2"
+            className="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface)] p-4"
           >
             <div className="flex flex-wrap items-center gap-2">
-              <h3 className="font-medium text-[var(--color-fg)] text-sm">
-                {t.title}
-              </h3>
-              {t.tags.map((tag) => (
-                <Badge key={tag} variant="secondary">
-                  {tag}
-                </Badge>
-              ))}
+              <p className="font-medium">{t.title}</p>
+              {t.kind ? (
+                <Badge variant="outline">{t.kind}</Badge>
+              ) : null}
             </div>
-            <p className="text-sm text-[var(--color-muted)] leading-relaxed">
+            <p className="mt-1.5 text-sm text-[var(--color-muted)] leading-relaxed">
               {t.body}
             </p>
-          </article>
+          </div>
         ))}
-      </div>
+      </section>
     </div>
   );
 }

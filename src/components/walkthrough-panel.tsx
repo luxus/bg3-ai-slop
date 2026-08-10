@@ -1,10 +1,9 @@
 import { WALKTHROUGH, type StepType } from "@/lib/data/walkthrough";
-import { useProgress, getStatus, countProgress } from "@/lib/store";
-import { CheckRow } from "@/components/check-row";
+import { useProgress, countProgress } from "@/lib/store";
 import { Button } from "@/components/ui/button";
 import { DualProgress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
-import { ExternalLink } from "lucide-react";
+import { WalkStepRow } from "@/components/walk-step-row";
 
 const TYPE_LABEL: Record<StepType, string> = {
   quest: "Quest",
@@ -14,26 +13,11 @@ const TYPE_LABEL: Record<StepType, string> = {
   story: "Story",
 };
 
-const TYPE_VARIANT: Record<
-  StepType,
-  "danger" | "warn" | "success" | "secondary" | "outline"
-> = {
-  quest: "danger",
-  item: "warn",
-  respec: "success",
-  order: "secondary",
-  story: "outline",
-};
-
 export function WalkthroughPanel() {
-  const {
-    walk,
-    walkSkip,
-    toggleWalk,
-    skipWalk,
-    actFilter,
-    setActFilter,
-  } = useProgress();
+  const walk = useProgress((s) => s.walk);
+  const walkSkip = useProgress((s) => s.walkSkip);
+  const actFilter = useProgress((s) => s.actFilter);
+  const setActFilter = useProgress((s) => s.setActFilter);
 
   const filtered =
     actFilter === 0
@@ -56,11 +40,13 @@ export function WalkthroughPanel() {
               Dark path walkthrough
             </h2>
             <p className="text-sm text-[var(--color-muted)] mt-1 max-w-2xl leading-relaxed">
-              Tick done or Skip. Red = done, amber = skipped. Both fill the bar.
+              Full route. Same checkboxes as{" "}
+              <strong className="text-[var(--color-fg)] font-medium">Where</strong>
+              — mark either place.
             </p>
           </div>
           <p className="text-sm text-[var(--color-muted)] tabular">
-            {stats.doneN} done · {stats.skipN} skip · {stats.total} total
+            {stats.doneN} done · {stats.skipN} skip · {stats.total}
           </p>
         </div>
         <DualProgress donePct={stats.donePct} skipPct={stats.skipPct} />
@@ -77,11 +63,24 @@ export function WalkthroughPanel() {
           ))}
         </div>
         <div className="flex flex-wrap gap-1.5 text-xs text-[var(--color-subtle)]">
-          <Badge variant="danger">Quest</Badge>
-          <Badge variant="warn">Item</Badge>
-          <Badge variant="success">Respec</Badge>
-          <Badge variant="secondary">Order (soft)</Badge>
-          <Badge variant="outline">Story</Badge>
+          {(Object.keys(TYPE_LABEL) as StepType[]).map((t) => (
+            <Badge
+              key={t}
+              variant={
+                t === "quest"
+                  ? "danger"
+                  : t === "item"
+                    ? "warn"
+                    : t === "respec"
+                      ? "success"
+                      : t === "order"
+                        ? "secondary"
+                        : "outline"
+              }
+            >
+              {TYPE_LABEL[t]}
+            </Badge>
+          ))}
         </div>
       </header>
 
@@ -102,49 +101,7 @@ export function WalkthroughPanel() {
               </div>
               <div className="space-y-2">
                 {steps.map((s) => (
-                  <CheckRow
-                    key={s.id}
-                    id={`walk-${s.id}`}
-                    status={getStatus(walk, walkSkip, s.id)}
-                    onToggle={() => toggleWalk(s.id)}
-                    onSkip={() => skipWalk(s.id)}
-                    title={s.title}
-                    subtitle={s.detail}
-                    badges={[
-                      {
-                        label: TYPE_LABEL[s.type],
-                        variant: TYPE_VARIANT[s.type],
-                      },
-                      {
-                        label:
-                          s.confidence === "verified" ? "Verified" : "Soft",
-                        variant:
-                          s.confidence === "verified" ? "success" : "secondary",
-                      },
-                      ...(s.who
-                        ? [{ label: s.who, variant: "outline" as const }]
-                        : []),
-                    ]}
-                  >
-                    {s.darkNote ? (
-                      <p className="mt-2 text-sm rounded-[var(--radius-sm)] px-3 py-2 bg-[var(--color-accent-soft)] border border-[var(--color-border)] text-[var(--color-fg)]">
-                        <span className="text-[var(--color-primary)] font-medium">
-                          Dark:{" "}
-                        </span>
-                        {s.darkNote}
-                      </p>
-                    ) : null}
-                    <a
-                      href={s.sourceUrl}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="mt-2 inline-flex items-center gap-1 text-xs text-[var(--color-muted)] hover:text-[var(--color-fg)]"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      {s.source}
-                      <ExternalLink className="h-3 w-3" />
-                    </a>
-                  </CheckRow>
+                  <WalkStepRow key={s.id} step={s} />
                 ))}
               </div>
             </section>

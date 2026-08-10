@@ -1,8 +1,9 @@
-import { r as __toESM } from "../_runtime.mjs";
+import { o as __toESM } from "../_runtime.mjs";
 import { f as require_jsx_runtime, p as require_react } from "../_libs/@radix-ui/react-checkbox+[...].mjs";
 import { f as createRouter, g as createRootRoute, h as createFileRoute, l as Scripts, m as lazyRouteComponent, p as Outlet, u as HeadContent } from "../_libs/@tanstack/react-router+[...].mjs";
+import { n as auth } from "./server-DiULw8zH.mjs";
 import { r as TriangleAlert } from "../_libs/lucide-react.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/router-iIrbJ6ZS.js
+//#region node_modules/.nitro/vite/services/ssr/assets/router-CVSt9caE.js
 var import_react = /* @__PURE__ */ __toESM(require_react());
 var import_jsx_runtime = require_jsx_runtime();
 function AppErrorComponent({ error }) {
@@ -137,9 +138,9 @@ function CreatedWithGrokBanner() {
 		})]
 	});
 }
-var styles_default = "/assets/styles-lIHL3OPU.css";
+var styles_default = "/assets/styles-TsnrlgDw.css";
 var APP_NAME = "BG3 Dark Run";
-var Route$1 = createRootRoute({
+var Route$3 = createRootRoute({
 	head: () => ({
 		meta: [
 			{ charSet: "utf-8" },
@@ -192,13 +193,32 @@ var Route$1 = createRootRoute({
 		] })]
 	})
 });
-var $$splitComponentImporter = () => import("./routes-C9GAl7nr.mjs");
-var rootRouteChildren = { IndexRoute: createFileRoute("/")({ component: lazyRouteComponent($$splitComponentImporter, "component") }).update({
-	id: "/",
-	path: "/",
-	getParentRoute: () => Route$1
-}) };
-var routeTree = Route$1._addFileChildren(rootRouteChildren)._addFileTypes();
+var $$splitComponentImporter$1 = () => import("./routes-C0_jkifL.mjs");
+var Route$2 = createFileRoute("/")({ component: lazyRouteComponent($$splitComponentImporter$1, "component") });
+var $$splitComponentImporter = () => import("./login-BwgCOA-v.mjs");
+var Route$1 = createFileRoute("/login")({ component: lazyRouteComponent($$splitComponentImporter, "component") });
+var Route = createFileRoute("/api/auth/$")({ server: { handlers: {
+	GET: ({ request }) => auth.handler(request),
+	POST: ({ request }) => auth.handler(request)
+} } });
+var rootRouteChildren = {
+	IndexRoute: Route$2.update({
+		id: "/",
+		path: "/",
+		getParentRoute: () => Route$3
+	}),
+	LoginRoute: Route$1.update({
+		id: "/login",
+		path: "/login",
+		getParentRoute: () => Route$3
+	}),
+	ApiAuthSplatRoute: Route.update({
+		id: "/api/auth/$",
+		path: "/api/auth/$",
+		getParentRoute: () => Route$3
+	})
+};
+var routeTree = Route$3._addFileChildren(rootRouteChildren)._addFileTypes();
 function getRouter() {
 	return createRouter({
 		routeTree,

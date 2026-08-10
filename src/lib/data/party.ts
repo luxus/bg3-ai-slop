@@ -61,11 +61,19 @@ export const CREATE_CHARACTER = {
   level1Note:
     "Subclass at Warlock 1. Hex Warrior already gives medium armour, shields, martial weapons + Bind Hexed Weapon (CHA attacks). Pact of the Blade still at level 3 for Extra Attack at 5.",
   level2Note:
-    "2 Eldritch Invocations. Recommended: Agonizing Blast + Devil’s Sight (or Beguiling Influence for face skills).",
+    "Warlock 2 has TWO steps: (A) +1 SPELL from the spell list, then (B) Eldritch INVOCATIONS — pick Agonising Blast (spelling with S) + Devil’s Sight. Invocations are not spells.",
   level3Note: "Pact Boon: Pact of the Blade.",
   level5Note: "Deepened Pact → Extra Attack with pact / hexed weapon.",
 };
 
+export const PARTY_NOTES = {
+  rest: "Warlock Pact slots refill on short rest — nova often, then short rest. Don’t long-rest hoard like a wizard.",
+  backup:
+    "Early Act 1 active four: You + Shadowheart + Astarion + Lae’zel (temp). When Minthara is ready, bench Lae’zel. Gale stays camp. Hireling only if you drop Lae’zel early.",
+  face: "You’re the CHA face. Astarion covers locks/stealth; Shadowheart covers religion/insight soft spots.",
+};
+
+/** Final / planned permanent party */
 export const PARTY: PartyMember[] = [
   {
     id: "tav",
@@ -79,12 +87,21 @@ export const PARTY: PartyMember[] = [
     darkPath: "Lean into the Urge. Absolute early, Murder Tribunal later.",
     combatRole: "Curse → weapon nova / EB. Short-rest slots.",
     levels: [
-      { level: "1", note: "Hexblade. 2 cantrips: EB + Booming Blade. 2 spells: Hex + Shield. Bind Hexed Weapon." },
-      { level: "2", note: "2 invocations: Agonizing Blast + Devil’s Sight (or Beguiling Influence)." },
+      {
+        level: "1",
+        note: "Hexblade. 2 cantrips: EB + Booming Blade. 2 spells: Hex + Shield. Bind Hexed Weapon.",
+      },
+      {
+        level: "2",
+        note: "Spell step: +1 spell. Then Invocations: Agonising Blast + Devil’s Sight.",
+      },
       { level: "3", note: "Pact of the Blade." },
       { level: "4", note: "ASI → CHA. 3rd cantrip (Mage Hand)." },
       { level: "5", note: "Deepened Pact Extra Attack. Big spike." },
-      { level: "8+", note: "Finish CHA 20. Optional later: 2 Paladin for smites (respec)." },
+      {
+        level: "8+",
+        note: "Finish CHA 20. Optional later: 2 Paladin for smites (respec).",
+      },
     ],
     openers: [
       "Hexblade’s Curse / Hex on boss",
@@ -118,39 +135,60 @@ export const PARTY: PartyMember[] = [
     origin: "Companion (race fixed)",
     race: "High Elf — fixed",
     classPath: "Rogue → Swashbuckler (or Thief)",
-    stats: "DEX primary (soft)",
-    why: "Locks, sneak, later Ascended damage.",
-    darkPath: "Ascend at Cazador.",
-    combatRole: "Sneak Attack every turn.",
+    stats: "DEX primary",
+    why: "Locks, sneak, Ascension power spike.",
+    darkPath: "Support Cazador Ascension for max power.",
+    combatRole: "Sneak attack + skills.",
     levels: [
-      { level: "3", note: "Swashbuckler." },
+      { level: "3", note: "Swashbuckler (or Thief for bonus actions)." },
       { level: "4", note: "Sharpshooter or DEX ASI." },
-      { level: "Act 3", note: "Ascend + Rhapsody." },
     ],
-    openers: ["Sneak Attack", "Special arrows on groups"],
+    openers: ["Hide / high ground", "Sneak attack", "Bonus offhand"],
   },
   {
     id: "minthara",
     name: "Minthara",
     role: "Frontline Destroyer",
-    origin: "Companion — Grove raid / Absolute path",
-    race: "Drow — fixed",
-    classPath: "Respec: Giant Barbarian or Oathbreaker",
-    stats: "STR primary (soft)",
-    why: "Dark-themed frontliner after Absolute path.",
-    darkPath: "Raid Grove → recruit → keep Absolute-aligned.",
-    combatRole: "Rage/smite and delete melee threats.",
+    origin: "Companion — Absolute / raid path",
+    race: "Lolth-Sworn Drow — fixed",
+    classPath: "Giant Barb or Oathbreaker (Withers)",
+    stats: "STR primary",
+    why: "Dark companion melee — replaces Lae’zel as permanent frontline.",
+    darkPath: "Raid Grove → free at Moonrise if needed.",
+    combatRole: "Throws / smites.",
     levels: [
-      { level: "Recruit", note: "After Grove raid path." },
-      { level: "Respec", note: "Giant Barb (throws) or Oathbreaker (smites)." },
+      { level: "Recruit", note: "Respec after free/recruit. Bench Lae’zel." },
       { level: "5", note: "Extra Attack." },
     ],
-    openers: ["Rage or smite setup", "Focus fire with the party"],
+    openers: ["Rage / smite", "Throw or GWM", "Shove elevation"],
   },
 ];
 
-export const PARTY_NOTES = {
-  rest: "Warlock slots return on short rest — use them. Cleric is long-rest heavy.",
-  backup: "No Minthara → Lae’zel Battlemaster or Giant Barb.",
-  face: "Haunted One + Deception; Persuasion via Beguiling Influence if needed.",
-};
+/** Temporary Act 1 bench note — not permanent party */
+export const TEMP_COMPANIONS: PartyMember[] = [
+  {
+    id: "laezel",
+    name: "Lae’zel (temporary)",
+    role: "Frontline Destroyer",
+    origin: "Companion — not final dark four",
+    race: "Githyanki — fixed",
+    classPath: "Fighter (default) · soft: Battlemaster",
+    stats: "STR primary · heavy armour",
+    why: "Best early tank/DPS until Minthara. Everburn Blade carrier. Strong at Creche.",
+    darkPath:
+      "She dislikes a lot of Absolute softness/evil she reads as weakness — approval may tank. Still fine to use her for power, then camp her.",
+    combatRole: "Melee pressure, Action Surge, heavy hits.",
+    levels: [
+      { level: "Now", note: "Keep leveling while she’s active — don’t waste her." },
+      {
+        level: "Soft respec",
+        note: "Battlemaster for Trip/Menacing attacks if you want more control.",
+      },
+      {
+        level: "Bench",
+        note: "When Minthara joins: camp Lae’zel, move Adamantine/big weapons over.",
+      },
+    ],
+    openers: ["Action Surge on bosses", "Trip / shove", "Everburn swings"],
+  },
+];

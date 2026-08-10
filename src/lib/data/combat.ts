@@ -2,91 +2,75 @@ export type CombatTip = {
   id: string;
   title: string;
   body: string;
-  tags: string[];
+  kind?: "general" | "trash" | "boss" | "undead" | "construct";
 };
 
 export const COMBAT_TIPS: CombatTip[] = [
   {
     id: "c-init",
-    title: "Win initiative, win the fight",
-    body: "Alert feat or high-DEX + initiative gear on at least Shadowheart and Astarion. First round Hold Person / Command turns bosses into loot pinatas.",
-    tags: ["setup"],
+    title: "Win initiative",
+    body: "Alert or high DEX on SH + Astarion. First round Hold Person / Command turns bosses into loot piñatas.",
+    kind: "general",
   },
   {
-    id: "c-hold",
-    title: "Hold Person / Hold Monster core",
-    body: "Shadowheart holds. Everyone piles crits. Killer’s Sweetheart + Craterflesh + smites/hex make single targets vanish in one turn.",
-    tags: ["control", "nova"],
+    id: "c-short",
+    title: "Short-rest economy",
+    body: "Warlock slots refill on short rest. Nova every hard fight, then short rest. Don’t hoard like a wizard.",
+    kind: "general",
   },
   {
-    id: "c-sg",
-    title: "Spirit Guardians is your AoE",
-    body: "Cast necrotic SG, walk through packs. Death Domain ignores necrotic resist at 6. No need for fancy Fireball setups on this party.",
-    tags: ["aoe"],
+    id: "c-trash",
+    title: "Trash packs",
+    body: "SH: Spirit Guardians + walk. Tav: EB / quick curse only if needed. Astarion: cleave weak. Minthara: throw or cleave. Save big slots.",
+    kind: "trash",
   },
   {
-    id: "c-elixirs",
-    title: "Pre-buff with elixirs",
-    body: "Elixir of Bloodlust (extra action on kill), Cloud Giant / Hill Giant strength for Minthara, Peerless Focus for concentration. Drink after long rest.",
-    tags: ["prep"],
+    id: "c-boss",
+    title: "Boss script",
+    body: "1) SH Hold Person / hold key add. 2) Tav Hexblade’s Curse + Hex. 3) Phalar Shriek. 4) Whole party dumps damage. 5) Luck of Far Realms / Sweetheart crit.",
+    kind: "boss",
   },
   {
-    id: "c-surprise",
-    title: "Surprise when possible",
-    body: "Group with invis / hide. Surprise round deletes half the encounter before they act. Dark Urge stealth + Astarion is enough.",
-    tags: ["prep"],
+    id: "c-undead",
+    title: "Undead / necrotic",
+    body: "Death SH Inescapable Destruction ignores necrotic resist. Radiant options still fine on others. Watch turn undead niches.",
+    kind: "undead",
   },
   {
-    id: "c-height",
-    title: "High ground + special arrows",
-    body: "Astarion opens with Arrow of Many Targets or slaying arrows on priority. Height advantage is free damage.",
-    tags: ["ranged"],
-  },
-  {
-    id: "c-throw",
-    title: "Chasms are free kills",
-    body: "Giant Barb / shove / Eldritch Blast Repelling (if taken) — yeet enemies off maps. Instant, no HP check.",
-    tags: ["cheese"],
+    id: "c-construct",
+    title: "Constructs / steel",
+    body: "Lightning after Wet helps. Foundry sabotage makes Act 3 constructs trivial. Force damage weapons if stuck.",
+    kind: "construct",
   },
   {
     id: "c-darkness",
-    title: "Darkness cheese (optional)",
-    body: "If you took Devil’s Sight on Hexblade: cast Darkness on the party. Enemies miss; you don’t. Combine with Shar spear path.",
-    tags: ["cheese"],
+    title: "Darkness cheese",
+    body: "Devil’s Sight + Darkness. Enemies miss; you don’t. Keep allies inside only if they can see too.",
+    kind: "general",
   },
   {
-    id: "c-focus",
-    title: "Focus fire, don’t spread",
-    body: "Kill order: enemy casters → legendary actions → multiattack brutes → trash. Dead enemies deal zero damage.",
-    tags: ["basics"],
-  },
-  {
-    id: "c-rest",
-    title: "Rest discipline",
-    body: "Long rest after major story fights. Short rest to top Astarion/Minthara. Don’t hoard potions — use Speed potions on bosses.",
-    tags: ["basics"],
+    id: "c-elixir",
+    title: "Elixir of the day",
+    body: "One elixir at a time. Bloodlust / Vigilance / Hill Giant STR on Minthara are top. Potions stack more freely.",
+    kind: "general",
   },
 ];
 
-export const OPENER_ROTATION = [
+export const OPENERS = [
   {
-    step: 1,
-    actor: "Shadowheart",
-    action: "Spirit Guardians (necrotic) or Hold Person on boss",
+    who: "Dark Urge",
+    steps: ["Hexblade’s Curse", "Hex (if lasting fight)", "Booming Blade attack or EB"],
   },
   {
-    step: 2,
-    actor: "Dark Urge",
-    action: "Hexblade’s Curse + weapon nova / EB on same target",
+    who: "Shadowheart",
+    steps: ["Spirit Guardians", "Hold Person priority target", "Dodge / warcast maintain"],
   },
   {
-    step: 3,
-    actor: "Astarion",
-    action: "Sneak Attack / special arrow into held or cursed target",
+    who: "Astarion",
+    steps: ["Hide or range high ground", "Sneak attack", "Bonus offhand / hand crossbow"],
   },
   {
-    step: 4,
-    actor: "Minthara",
-    action: "Rage/smite and delete whatever is still standing",
+    who: "Minthara",
+    steps: ["Rage / smite setup", "Throw or GWM swing", "Shove off elevation if free kill"],
   },
 ];

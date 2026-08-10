@@ -1,140 +1,179 @@
 /**
- * Character-create facts verified against bg3.wiki (Patch 8 era, checked 2026-08-09).
- * Soft/story advice is NOT in this list — only hard rules the game UI enforces.
+ * Hard facts we have re-checked against bg3.wiki (2026-08-09).
+ * Soft recommendations are labelled separately in the UI.
  */
+
 export type VerifiedFact = {
   id: string;
+  topic: string;
+  /** Alias used by Proof panel */
   claim: string;
-  status: "verified" | "corrected" | "soft";
+  fact: string;
   source: string;
   sourceUrl: string;
+  checked: string;
+  status: "verified" | "corrected" | "soft";
   note?: string;
 };
-
-export const VERIFIED_FACTS: VerifiedFact[] = [
-  {
-    id: "cantrips-l1",
-    claim: "Warlock level 1 knows exactly 2 cantrips (not 3).",
-    status: "verified",
-    source: "bg3.wiki — Warlock progression",
-    sourceUrl: "https://bg3.wiki/wiki/Warlock",
-    note: "3rd cantrip at Warlock 4; 4th at Warlock 10.",
-  },
-  {
-    id: "spells-l1",
-    claim: "Warlock level 1 knows exactly 2 spells and has 1 Pact Magic slot.",
-    status: "verified",
-    source: "bg3.wiki — Warlock progression",
-    sourceUrl: "https://bg3.wiki/wiki/Warlock",
-  },
-  {
-    id: "cantrips-pick",
-    claim: "Pick Eldritch Blast + Booming Blade at level 1.",
-    status: "verified",
-    source: "bg3.wiki — Booming Blade (Warlock cantrip list)",
-    sourceUrl: "https://bg3.wiki/wiki/Booming_Blade",
-    note: "Both are on the Warlock cantrip list. Build choice, not a free extra cantrip.",
-  },
-  {
-    id: "background",
-    claim: "Dark Urge background is locked to Haunted One (Medicine + Intimidation).",
-    status: "verified",
-    source: "bg3.wiki — Haunted One / Origins",
-    sourceUrl: "https://bg3.wiki/wiki/Haunted_One",
-  },
-  {
-    id: "hexblade-l1",
-    claim:
-      "Hexblade is chosen at Warlock level 1. Hex Warrior: medium armour, shields, martial weapons + Bind Hexed Weapon (CHA for bound weapon attacks).",
-    status: "verified",
-    source: "bg3.wiki — The Hexblade",
-    sourceUrl: "https://bg3.wiki/wiki/The_Hexblade",
-    note: "You do not wait until level 3 for CHA weapons — Bind Hexed Weapon is level 1. Pact of the Blade at 3 is still taken for Extra Attack at 5.",
-  },
-  {
-    id: "shield",
-    claim: "Shield is available to Hexblade via expanded spell list at level 1.",
-    status: "verified",
-    source: "bg3.wiki — Shield / Hexblade expanded list",
-    sourceUrl: "https://bg3.wiki/wiki/Shield_(spell)",
-    note: "Not on the base Warlock list for other patrons.",
-  },
-  {
-    id: "hex",
-    claim: "Hex is a base Warlock 1st-level spell.",
-    status: "verified",
-    source: "bg3.wiki — List of Warlock spells",
-    sourceUrl: "https://bg3.wiki/wiki/List_of_Warlock_spells",
-  },
-  {
-    id: "skills",
-    claim:
-      "Warlock picks 2 skills from: Arcana, Deception, History, Intimidation, Investigation, Religion. Persuasion is NOT on the Warlock list.",
-    status: "verified",
-    source: "bg3.wiki — Warlock / Proficiency",
-    sourceUrl: "https://bg3.wiki/wiki/Warlock",
-    note: "Haunted One already gives Intimidation. Take Deception + Arcana (or Investigation). Persuasion later via Beguiling Influence invocation.",
-  },
-  {
-    id: "drow",
-    claim:
-      "Lolth-Sworn Drow: Superior Darkvision, Perception proficiency, Drow Magic (Dancing Lights L1, Faerie Fire L3, Darkness L5 LR). Subrace is mostly dialogue/evil options.",
-    status: "verified",
-    source: "bg3.wiki — Drow",
-    sourceUrl: "https://bg3.wiki/wiki/Drow",
-  },
-  {
-    id: "invocations-l2",
-    claim: "Warlock level 2: choose 2 Eldritch Invocations.",
-    status: "verified",
-    source: "bg3.wiki — Warlock",
-    sourceUrl: "https://bg3.wiki/wiki/Warlock",
-    note: "Recommended: Agonizing Blast + Devil’s Sight (or Beguiling Influence for Persuasion/Deception).",
-  },
-  {
-    id: "extra-attack",
-    claim:
-      "Extra Attack for this build: Pact of the Blade at 3 → Deepened Pact Extra Attack at Warlock 5.",
-    status: "verified",
-    source: "bg3.wiki — Deepened Pact / Pact of the Blade",
-    sourceUrl: "https://bg3.wiki/wiki/Deepened_Pact",
-  },
-  {
-    id: "stats",
-    claim: "Target array STR 8, DEX 16, CON 14, INT 8, WIS 10, CHA 17 is a build recommendation (point-buy targets), not a hard game rule.",
-    status: "soft",
-    source: "Build recommendation",
-    sourceUrl: "https://bg3.wiki/wiki/The_Hexblade",
-    note: "Final numbers depend on racial bonuses / point-buy UI. Prioritise CHA, then DEX/CON.",
-  },
-  {
-    id: "story-path",
-    claim: "Grove raid / Shar Nightsong kill / Astarion ascend / Bhaal path are story recommendations for a dark run — not required for the build to function.",
-    status: "soft",
-    source: "Playstyle path",
-    sourceUrl: "https://bg3.wiki/wiki/The_Dark_Urge",
-  },
-];
 
 export const PROOF_PROCESS = [
   {
     step: 1,
-    title: "Hard rules → wiki first",
-    body: "Class tables, cantrip/spell counts, locked backgrounds, subclass features: check bg3.wiki (updated for Patch 8+).",
+    title: "Check the class table",
+    body: "Cantrips known, spells known, slots, and level features come from bg3.wiki class tables — not memory.",
   },
   {
     step: 2,
-    title: "Create screen is ground truth",
-    body: "If the game UI disagrees with a guide, trust the game. Report the mismatch and we correct the app.",
+    title: "Match in-game spelling",
+    body: "e.g. Agonising Blast (with S). Invocations ≠ spells — separate level-up screens.",
   },
   {
     step: 3,
     title: "Label soft advice",
-    body: "Quest order, “best” items, and party vibes are recommendations. They can be wrong for your run without breaking the character.",
+    body: "Build preferences (race, feats, companion subclasses) are soft unless the wiki hard-locks them (Haunted One on Dark Urge).",
   },
   {
     step: 4,
-    title: "Correct in public",
-    body: "When a mistake is found (e.g. 3 cantrips, free background), fix the app data and keep a Verified list so errors don’t creep back.",
+    title: "Correct when you report UI",
+    body: "If the create/level screen differs, we update data and mark the fact corrected.",
+  },
+];
+
+export const VERIFIED_FACTS: VerifiedFact[] = [
+  {
+    id: "v-warlock-cantrips",
+    topic: "Warlock cantrips known",
+    fact: "Warlock knows 2 cantrips at levels 1–3, and 3 cantrips at level 4+.",
+    claim: "Warlock knows 2 cantrips at levels 1–3, and 3 cantrips at level 4+.",
+    source: "bg3.wiki — Warlock class table",
+    sourceUrl: "https://bg3.wiki/wiki/Warlock",
+    checked: "2026-08-09",
+    status: "corrected",
+    note: "Earlier error: “3 cantrips at create”. Third cantrip comes at Warlock 4.",
+  },
+  {
+    id: "v-warlock-spells-l1",
+    topic: "Warlock spells known level 1",
+    fact: "Warlock knows 2 spells at level 1 (and has 1 Pact Magic slot).",
+    claim: "Warlock knows 2 spells at level 1 (and has 1 Pact Magic slot).",
+    source: "bg3.wiki — Warlock class table",
+    sourceUrl: "https://bg3.wiki/wiki/Warlock",
+    checked: "2026-08-09",
+    status: "verified",
+  },
+  {
+    id: "v-warlock-l2-steps",
+    topic: "Warlock level 2 steps",
+    fact: "At level 2: Spells Known becomes 3 (pick +1 spell), then choose 2 Eldritch Invocations on a separate screen.",
+    claim:
+      "At level 2: Spells Known becomes 3 (pick +1 spell), then choose 2 Eldritch Invocations on a separate screen.",
+    source: "bg3.wiki — Warlock / Eldritch Invocation",
+    sourceUrl: "https://bg3.wiki/wiki/Warlock",
+    checked: "2026-08-09",
+    status: "verified",
+    note: "Agonising Blast is an Invocation, not a spell — it never appears on the spell list.",
+  },
+  {
+    id: "v-agonising",
+    topic: "Agonising Blast spelling",
+    fact: "In-game / wiki spelling is Agonising Blast (British S), available as Invocation at Warlock 2+.",
+    claim:
+      "In-game / wiki spelling is Agonising Blast (British S), available as Invocation at Warlock 2+.",
+    source: "bg3.wiki — Agonising Blast",
+    sourceUrl: "https://bg3.wiki/wiki/Agonising_Blast",
+    checked: "2026-08-09",
+    status: "verified",
+  },
+  {
+    id: "v-hexblade-shield",
+    topic: "Hexblade expanded spells",
+    fact: "Hexblade expanded list includes Shield, Wrathful Smite, Blindness, Branding Smite, Blink, Elemental Weapon.",
+    claim:
+      "Hexblade expanded list includes Shield, Wrathful Smite, Blindness, Branding Smite, Blink, Elemental Weapon.",
+    source: "bg3.wiki — The Hexblade",
+    sourceUrl: "https://bg3.wiki/wiki/The_Hexblade",
+    checked: "2026-08-09",
+    status: "verified",
+    note: "Shield is only available because of Hexblade — not on base Warlock list.",
+  },
+  {
+    id: "v-hexblade-l1",
+    topic: "Hexblade features at 1",
+    fact: "Hexblade Warrior (Bind Hexed Weapon, medium armour, shields, martial weapons) and Hexblade’s Curse at level 1.",
+    claim:
+      "Hexblade Warrior (Bind Hexed Weapon, medium armour, shields, martial weapons) and Hexblade’s Curse at level 1.",
+    source: "bg3.wiki — The Hexblade",
+    sourceUrl: "https://bg3.wiki/wiki/The_Hexblade",
+    checked: "2026-08-09",
+    status: "verified",
+  },
+  {
+    id: "v-warlock-skills",
+    topic: "Warlock skill list",
+    fact: "Warlock may choose skills from: Arcana, Deception, History, Intimidation, Investigation, Religion only.",
+    claim:
+      "Warlock may choose skills from: Arcana, Deception, History, Intimidation, Investigation, Religion only.",
+    source: "bg3.wiki — Warlock",
+    sourceUrl: "https://bg3.wiki/wiki/Warlock",
+    checked: "2026-08-09",
+    status: "corrected",
+    note: "Earlier error: listing Persuasion as a Warlock skill. Use Beguiling Influence for Persuasion.",
+  },
+  {
+    id: "v-haunted-one",
+    topic: "Haunted One background",
+    fact: "Haunted One grants Medicine and Intimidation. Dark Urge origin locks this background.",
+    claim:
+      "Haunted One grants Medicine and Intimidation. Dark Urge origin locks this background.",
+    source: "bg3.wiki — Haunted One / The Dark Urge",
+    sourceUrl: "https://bg3.wiki/wiki/Haunted_One",
+    checked: "2026-08-09",
+    status: "verified",
+  },
+  {
+    id: "v-drow",
+    topic: "Lolth-Sworn Drow",
+    fact: "Drow get Superior Darkvision, Drow Weapon Training, Perception proficiency, and Drow Magic.",
+    claim:
+      "Drow get Superior Darkvision, Drow Weapon Training, Perception proficiency, and Drow Magic.",
+    source: "bg3.wiki — Drow / Lolth-Sworn Drow",
+    sourceUrl: "https://bg3.wiki/wiki/Drow",
+    checked: "2026-08-09",
+    status: "verified",
+  },
+  {
+    id: "v-pact-blade",
+    topic: "Pact of the Blade",
+    fact: "Pact Boon chosen at Warlock 3. Pact of the Blade is the melee pact; Deepened Pact Extra Attack at 5.",
+    claim:
+      "Pact Boon chosen at Warlock 3. Pact of the Blade is the melee pact; Deepened Pact Extra Attack at 5.",
+    source: "bg3.wiki — Pact of the Blade / Warlock",
+    sourceUrl: "https://bg3.wiki/wiki/Pact_of_the_Blade",
+    checked: "2026-08-09",
+    status: "verified",
+  },
+];
+
+/** Soft recommendations (not hard rules) — labelled in UI. */
+export const SOFT_RECS = [
+  {
+    id: "s-race",
+    topic: "Race pick",
+    note: "Lolth-Sworn Drow is recommended for darkvision + Darkness + dark RP. Alternatives (Drow Half-Elf, Dragonborn) are fine if you prefer looks.",
+  },
+  {
+    id: "s-stats",
+    topic: "Ability scores",
+    note: "Target CHA primary, DEX/CON secondary, dump STR. Exact point-buy numbers depend on racial bonuses in the UI.",
+  },
+  {
+    id: "s-invocations",
+    topic: "Invocation picks",
+    note: "Recommended: Agonising Blast + Devil’s Sight (or Beguiling Influence for Persuasion/Deception). Separate from the +1 spell at level 2.",
+  },
+  {
+    id: "s-party",
+    topic: "Companion subclasses",
+    note: "Death Domain SH, Swashbuckler Astarion, Giant Barb/Oathbreaker Minthara are build preferences for Balanced dark run — not the only viable options.",
   },
 ];
