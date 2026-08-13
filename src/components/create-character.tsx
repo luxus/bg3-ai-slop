@@ -158,14 +158,16 @@ export function CreateCharacter({ defaultOpen = false }: { defaultOpen?: boolean
                 from Haunted One. Persuasion needs Beguiling Influence later.
               </p>
             </div>
-            <div className="sm:col-span-2 space-y-1">
+            <div className="sm:col-span-2 space-y-1.5">
               <p className="text-xs uppercase tracking-wide text-[var(--color-subtle)]">
-                Level notes
+                Level notes (warlock is weird)
               </p>
               <p className="text-[var(--color-muted)]">{c.level1Note}</p>
               <p className="text-[var(--color-muted)]">{c.level2Note}</p>
               <p className="text-[var(--color-muted)]">{c.level3Note}</p>
+              <p className="text-[var(--color-fg)] font-medium">{c.level4Note}</p>
               <p className="text-[var(--color-muted)]">{c.level5Note}</p>
+              <p className="text-[var(--color-muted)]">{c.level7Note}</p>
             </div>
           </div>
         </div>

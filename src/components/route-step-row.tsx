@@ -16,6 +16,10 @@ export function RouteStepRow({
   const toggleWalk = useProgress((s) => s.toggleWalk);
   const skipWalk = useProgress((s) => s.skipWalk);
 
+  const subtitleParts = [step.detail];
+  if (step.why) subtitleParts.push(`Why: ${step.why}`);
+  if (step.gearFor) subtitleParts.push(`Equip on: ${step.gearFor}`);
+
   return (
     <CheckRow
       id={`route-${step.id}`}
@@ -23,7 +27,7 @@ export function RouteStepRow({
       onToggle={() => toggleWalk(step.id)}
       onSkip={() => skipWalk(step.id)}
       title={`${index}. ${step.do}`}
-      subtitle={step.detail}
+      subtitle={subtitleParts.join("\n")}
       badges={[
         step.optional
           ? { label: "Optional", variant: "secondary" as const }

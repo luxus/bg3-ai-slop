@@ -1,5 +1,11 @@
 import { useMemo, useState } from "react";
-import { PARTY, PARTY_NOTES, TEMP_COMPANIONS } from "@/lib/data/party";
+import {
+  PARTY,
+  PARTY_NOTES,
+  TEMP_COMPANIONS,
+  type PartyMember,
+  type RespecStep,
+} from "@/lib/data/party";
 import {
   LEVEL_PICKS,
   PARTY_SYNERGY,
@@ -30,7 +36,7 @@ const CHAR_META: Record<
     Icon: LucideIcon;
     color: string;
     temp?: boolean;
-    member?: (typeof PARTY)[number] | (typeof TEMP_COMPANIONS)[number];
+    member?: PartyMember;
   }
 > = {
   tav: {
@@ -79,6 +85,112 @@ const ORDER: MemberKey[] = [
   "laezel",
 ];
 
+const RESPEC_BADGE: Record<
+  PartyMember["respec"],
+  { label: string; variant: "danger" | "warn" | "secondary" | "outline" }
+> = {
+  create: { label: "Create", variant: "danger" },
+  required: { label: "Respec required", variant: "danger" },
+  optional: { label: "Respec optional", variant: "warn" },
+  never: { label: "No respec", variant: "secondary" },
+};
+
+function StatGrid({ stats }: { stats: Record<string, number> }) {
+  return (
+    <div className="grid grid-cols-3 sm:grid-cols-6 gap-1.5">
+      {Object.entries(stats).map(([k, v]) => (
+        <div
+          key={k}
+          className="rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-[var(--color-elevated)] px-1.5 py-1.5 text-center"
+        >
+          <p className="text-[9px] uppercase text-[var(--color-subtle)]">{k}</p>
+          <p className="text-base font-semibold tabular text-[var(--color-fg)]">
+            {v}
+          </p>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function RespecChecklist({ m }: { m: PartyMember }) {
+  if (!m.respecSteps?.length) return null;
+  const badge = RESPEC_BADGE[m.respec];
+
+  return (
+    <section className="rounded-[var(--radius-xl)] border border-[var(--color-primary)]/35 bg-[var(--color-surface)] p-4 space-y-3">
+      <div className="flex flex-wrap items-center gap-2">
+        <h3 className="font-semibold text-[var(--color-fg)]">
+          {m.respecTitle ?? "Setup checklist"}
+        </h3>
+        <Badge variant={badge.variant}>{badge.label}</Badge>
+      </div>
+
+      {m.statsArray ? (
+        <div className="space-y-1.5">
+          <p className="text-[10px] uppercase tracking-wide text-[var(--color-subtle)]">
+            Ability scores
+          </p>
+          <StatGrid stats={m.statsArray} />
+        </div>
+      ) : null}
+
+      {m.skills?.length ? (
+        <div>
+          <p className="text-[10px] uppercase tracking-wide text-[var(--color-subtle)] mb-1.5">
+            Skill proficiencies
+          </p>
+          <div className="flex flex-wrap gap-1.5">
+            {m.skills.map((s) => (
+              <WikiChip key={s} text={s} size="sm" />
+            ))}
+          </div>
+        </div>
+      ) : null}
+
+      {m.expertise?.length ? (
+        <div>
+          <p className="text-[10px] uppercase tracking-wide text-[var(--color-subtle)] mb-1.5">
+            Expertise
+          </p>
+          <div className="flex flex-wrap gap-1.5">
+            {m.expertise.map((s) => (
+              <WikiChip key={s} text={s} size="sm" />
+            ))}
+          </div>
+        </div>
+      ) : null}
+
+      <ol className="space-y-2.5">
+        {m.respecSteps.map((step: RespecStep, i) => (
+          <li key={`${step.label}-${i}`} className="flex gap-2.5 text-sm">
+            <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[var(--color-accent-soft)] text-[11px] font-semibold text-[var(--color-primary)] tabular">
+              {i + 1}
+            </span>
+            <div className="min-w-0 space-y-1">
+              <p className="text-[var(--color-fg)] leading-snug">
+                <RichWikiText text={step.label} />
+              </p>
+              {step.chips?.length ? (
+                <div className="flex flex-wrap gap-1">
+                  {step.chips.map((c) => (
+                    <WikiChip key={c} text={c} size="sm" />
+                  ))}
+                </div>
+              ) : null}
+              {step.detail ? (
+                <p className="text-xs text-[var(--color-muted)] leading-relaxed">
+                  {step.detail}
+                </p>
+              ) : null}
+            </div>
+          </li>
+        ))}
+      </ol>
+    </section>
+  );
+}
+
 export function PartyPanel() {
   const levels = useProgress((s) => s.levels);
   const levelsSkip = useProgress((s) => s.levelsSkip);
@@ -106,7 +218,8 @@ export function PartyPanel() {
           Party
         </h2>
         <p className="text-sm text-[var(--color-muted)] leading-relaxed">
-          Pick a character. Skills / spells use wiki icons + links.
+          Pick a face → follow the numbered checklist (stats, skills, subclass).
+          Level-ups tab = each level in game order.
         </p>
       </header>
 
@@ -115,6 +228,7 @@ export function PartyPanel() {
           const c = CHAR_META[id];
           const active = sel === id;
           const Icon = c.Icon;
+          const member = c.member;
           return (
             <button
               key={id}
@@ -143,6 +257,10 @@ export function PartyPanel() {
                 <span className="text-[9px] uppercase tracking-wide text-[var(--color-warn)]">
                   temp
                 </span>
+              ) : member?.respec === "required" ? (
+                <span className="text-[9px] uppercase tracking-wide text-[var(--color-primary)]">
+                  respec
+                </span>
               ) : null}
             </button>
           );
@@ -157,6 +275,11 @@ export function PartyPanel() {
             </h3>
             {meta.temp ? <Badge variant="warn">Act 1 temp</Badge> : null}
             {m ? <Badge variant="outline">{m.role}</Badge> : null}
+            {m ? (
+              <Badge variant={RESPEC_BADGE[m.respec].variant}>
+                {RESPEC_BADGE[m.respec].label}
+              </Badge>
+            ) : null}
           </div>
           {m ? (
             <p className="mt-1 text-sm text-[var(--color-muted)]">
@@ -198,6 +321,17 @@ export function PartyPanel() {
         <div className="space-y-4">
           {sel === "tav" ? <CreateCharacter /> : null}
 
+          <RespecChecklist m={m} />
+
+          {m.howToPlay ? (
+            <div className="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-elevated)] p-3 text-sm text-[var(--color-muted)] leading-relaxed">
+              <p className="text-[10px] uppercase tracking-wide text-[var(--color-subtle)] mb-1">
+                How to play
+              </p>
+              <RichWikiText text={m.howToPlay} />
+            </div>
+          ) : null}
+
           <dl className="grid gap-3 sm:grid-cols-2 text-sm">
             <div className="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface)] p-3">
               <dt className="text-[10px] uppercase tracking-wide text-[var(--color-subtle)]">
@@ -211,15 +345,15 @@ export function PartyPanel() {
             </div>
             <div className="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface)] p-3">
               <dt className="text-[10px] uppercase tracking-wide text-[var(--color-subtle)]">
-                Stats
+                Combat role
               </dt>
-              <dd className="mt-1 font-mono text-xs text-[var(--color-muted)]">
-                {m.stats}
+              <dd className="mt-1 text-[var(--color-muted)] leading-relaxed">
+                <RichWikiText text={m.combatRole} />
               </dd>
             </div>
             <div className="sm:col-span-2 rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface)] p-3">
               <dt className="text-[10px] uppercase tracking-wide text-[var(--color-subtle)]">
-                Why
+                Why this build
               </dt>
               <dd className="mt-1 text-[var(--color-muted)] leading-relaxed">
                 <RichWikiText text={m.why} />
@@ -266,34 +400,9 @@ export function PartyPanel() {
               ))}
             </ul>
             <p className="mt-2 text-xs text-[var(--color-subtle)]">
-              Full in-game order picks → Level-ups.
+              Full screen-by-screen picks → Level-ups tab.
             </p>
           </div>
-
-          {sel === "shadowheart" ? (
-            <div className="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-elevated)] p-4 text-sm text-[var(--color-muted)]">
-              <p className="font-medium text-[var(--color-fg)] mb-2">
-                Withers respec checklist
-              </p>
-              <ol className="list-decimal list-inside space-y-2">
-                <li>Class → Cleric</li>
-                <li className="flex flex-wrap items-center gap-1">
-                  Subclass → <WikiChip text="Death Domain" size="sm" />
-                </li>
-                <li>WIS + CON first</li>
-                <li className="flex flex-wrap items-center gap-1">
-                  Cantrips: <WikiChip text="Toll the Dead" size="sm" />
-                  <WikiChip text="Guidance" size="sm" />
-                  <WikiChip text="Sacred Flame" size="sm" />
-                </li>
-                <li className="flex flex-wrap items-center gap-1">
-                  Prepare: <WikiChip text="Bless" size="sm" />
-                  <WikiChip text="Healing Word" size="sm" />
-                  <WikiChip text="Command" size="sm" />
-                </li>
-              </ol>
-            </div>
-          ) : null}
         </div>
       ) : null}
 
@@ -301,8 +410,8 @@ export function PartyPanel() {
         <div className="space-y-3">
           <DualProgress donePct={stats.donePct} skipPct={stats.skipPct} />
           <p className="text-xs text-[var(--color-subtle)]">
-            Section titles (Cantrips / Spells / …) are labels only. Icons sit
-            next to each skill name and open bg3.wiki.
+            Each card matches an in-game level-up. Tick done when you finish that
+            screen.
           </p>
           <div className="space-y-2">
             {filtered.map((l) => (

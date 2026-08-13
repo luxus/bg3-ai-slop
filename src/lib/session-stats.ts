@@ -1,4 +1,4 @@
-/** Helpers for session stopwatch / lap progress deltas. */
+/** Helpers for session stopwatch / named segments. */
 
 export type SessionCounts = {
   items: number;
@@ -7,9 +7,12 @@ export type SessionCounts = {
   longRests: number;
 };
 
+/** Optional named checkpoint inside a session (map / quest chunk). */
 export type SessionLap = {
   id: string;
   index: number;
+  /** User label, e.g. "Grove", "Underdark" */
+  name: string;
   startedAt: number;
   endedAt: number;
   durationMs: number;
@@ -18,22 +21,22 @@ export type SessionLap = {
 
 export type ActiveSession = {
   id: string;
+  /** Editable title */
+  name: string;
   startedAt: number;
-  /** When pause was pressed (null if running) */
   pausedAt: number | null;
-  /** Total ms spent paused */
   pauseAccumMs: number;
-  /** Start of current lap */
   lapStartedAt: number;
-  /** Counts when session started */
+  /** Name for the open segment (edited live, used when Lap is pressed) */
+  currentLapName: string;
   baseline: SessionCounts;
-  /** Counts when current lap started */
   lapBaseline: SessionCounts;
   laps: SessionLap[];
 };
 
 export type SavedSession = {
   id: string;
+  name: string;
   startedAt: number;
   endedAt: number;
   durationMs: number;
@@ -51,21 +54,15 @@ export function countDone(map: Record<string, boolean>): number {
   return n;
 }
 
-export function deltaCounts(from: SessionCounts, to: SessionCounts): SessionCounts {
+export function deltaCounts(
+  from: SessionCounts,
+  to: SessionCounts,
+): SessionCounts {
   return {
     items: Math.max(0, to.items - from.items),
     walk: Math.max(0, to.walk - from.walk),
     levels: Math.max(0, to.levels - from.levels),
     longRests: Math.max(0, to.longRests - from.longRests),
-  };
-}
-
-export function addCounts(a: SessionCounts, b: SessionCounts): SessionCounts {
-  return {
-    items: a.items + b.items,
-    walk: a.walk + b.walk,
-    levels: a.levels + b.levels,
-    longRests: a.longRests + b.longRests,
   };
 }
 
@@ -80,23 +77,11 @@ export function formatElapsed(ms: number): string {
   return `${m}:${String(sec).padStart(2, "0")}`;
 }
 
-export function sessionElapsedMs(
-  session: ActiveSession,
-  now: number,
-): number {
+export function sessionElapsedMs(session: ActiveSession, now: number): number {
   const end = session.pausedAt ?? now;
   return Math.max(0, end - session.startedAt - session.pauseAccumMs);
 }
 
-export function lapElapsedMs(session: ActiveSession, now: number): number {
-  const end = session.pausedAt ?? now;
-  return Math.max(0, end - session.lapStartedAt - (session.pausedAt ? 0 : 0));
-  // pause: when paused, freeze at pausedAt - lapStartedAt adjusted by pauseAccum only for whole session
-  // simpler: lap duration = sessionElapsed - sum(completed lap durations) when running is messy
-  // use: if paused, duration = pausedAt - lapStartedAt - pauseSinceLap
-}
-
-/** Lap wall time ignoring global pause bookkeeping complexity: use lapStartedAt to now/pausedAt */
 export function currentLapMs(session: ActiveSession, now: number): number {
   const end = session.pausedAt ?? now;
   return Math.max(0, end - session.lapStartedAt);
@@ -104,4 +89,17 @@ export function currentLapMs(session: ActiveSession, now: number): number {
 
 export function uid(): string {
   return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`;
+}
+
+export function defaultSessionName(at = Date.now()): string {
+  return new Date(at).toLocaleString(undefined, {
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+export function defaultLapName(index: number): string {
+  return `Segment ${index}`;
 }

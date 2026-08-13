@@ -63,6 +63,7 @@ function FightCard({ f }: { f: FightScript }) {
               {f.kind === "level-band" ? "levels" : f.kind}
             </Badge>
             <Badge variant="outline">Act {f.act}</Badge>
+            <Badge variant="success">Lv {f.recommendedLevel}</Badge>
             {f.optional ? <Badge variant="outline">optional</Badge> : null}
           </div>
           <h3 className="font-semibold text-[var(--color-fg)]">{f.title}</h3>
@@ -80,6 +81,18 @@ function FightCard({ f }: { f: FightScript }) {
 
       {open ? (
         <div className="space-y-4 border-t border-[var(--color-border)] px-4 py-4">
+          <p className="text-sm rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-elevated)] px-3 py-2 text-[var(--color-muted)]">
+            <span className="font-medium text-[var(--color-fg)]">
+              Recommended level:{" "}
+            </span>
+            <span className="tabular text-[var(--color-primary)]">
+              {f.recommendedLevel}
+            </span>
+            <span className="text-[var(--color-subtle)]">
+              {" "}
+              (Balanced / this dark party — soft)
+            </span>
+          </p>
           <div>
             <p className="text-[10px] uppercase tracking-wide text-[var(--color-subtle)] mb-2">
               Opener — cast / use in order
@@ -149,8 +162,8 @@ export function FightsPanel() {
       <header className="space-y-1">
         <h2 className="text-xl font-semibold tracking-tight">Fights</h2>
         <p className="text-sm text-[var(--color-muted)] leading-relaxed">
-          Boss / hard fights with party openers. Spell names use wiki icons +
-          links.
+          Boss / hard fights with recommended level badges and openers. Spell
+          names link to the wiki.
         </p>
       </header>
 

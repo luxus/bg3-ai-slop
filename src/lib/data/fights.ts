@@ -39,6 +39,8 @@ export type FightScript = {
   kind: "boss" | "hard" | "level-band";
   /** When this matters */
   when: string;
+  /** Soft recommended party level (Balanced) */
+  recommendedLevel: string;
   /** One-line goal */
   goal: string;
   /** Ordered opener chips */
@@ -69,6 +71,7 @@ export const FIGHTS: FightScript[] = [
     title: "Levels 1–3 — learning curve",
     kind: "level-band",
     when: "Nautiloid → Grove / early wilderness",
+    recommendedLevel: "1–3",
     goal: "Survive with short rests. No Spirit Guardians yet.",
     opener: [
       { who: "shadowheart", label: "Bless", icon: "bless" },
@@ -91,6 +94,7 @@ export const FIGHTS: FightScript[] = [
     title: "Level 5 spike — party comes online",
     kind: "level-band",
     when: "After Extra Attack / Spirit Guardians",
+    recommendedLevel: "5+",
     goal: "Default script for the rest of the run.",
     opener: [
       { who: "shadowheart", label: "Spirit Guardians", icon: "spirit", note: "Necrotic" },
@@ -116,6 +120,7 @@ export const FIGHTS: FightScript[] = [
     title: "Commander Zhalk",
     kind: "boss",
     when: "Nautiloid helm",
+    recommendedLevel: "1",
     goal: "Loot Everburn Blade before timer / escape.",
     opener: [
       { who: "shadowheart", label: "Command: Drop (optional)", icon: "hold" },
@@ -133,6 +138,7 @@ export const FIGHTS: FightScript[] = [
     title: "Auntie Ethel",
     kind: "boss",
     when: "Teahouse / Wetlands lair",
+    recommendedLevel: "4–5",
     goal: "Force bargain → +1 CHA hair. Don’t kill her too early.",
     opener: [
       { who: "shadowheart", label: "Bless / Hold", icon: "hold" },
@@ -151,6 +157,7 @@ export const FIGHTS: FightScript[] = [
     title: "Grym (Adamantine Forge)",
     kind: "boss",
     when: "Grymforge lava",
+    recommendedLevel: "5–6",
     goal: "Superheat → hammer → craft gear. Don’t stand in lava.",
     opener: [
       { who: "any", label: "Lava valve / heat Grym", icon: "buff" },
@@ -168,6 +175,7 @@ export const FIGHTS: FightScript[] = [
     title: "Inquisitor W’wargaz",
     kind: "hard",
     when: "Creche — after shopping Jeera",
+    recommendedLevel: "5–6",
     goal: "Diadem of Arcane Synergy + loot. Shop first.",
     opener: [
       { who: "shadowheart", label: "Hold / SG if 5+", icon: "spirit" },
@@ -185,6 +193,7 @@ export const FIGHTS: FightScript[] = [
     title: "Grove raid (Absolute)",
     kind: "hard",
     when: "After power route + tell Minthara",
+    recommendedLevel: "5–6",
     goal: "Clear Grove. Loot Kagha. Accept companion exits.",
     opener: [
       { who: "shadowheart", label: "Spirit Guardians walk", icon: "spirit" },
@@ -204,6 +213,7 @@ export const FIGHTS: FightScript[] = [
     title: "Free Minthara (Moonrise prison)",
     kind: "hard",
     when: "First Moonrise visit",
+    recommendedLevel: "6–7",
     goal: "Get her out alive. Escort on foot.",
     opener: [
       { who: "tav", label: "Bluff / Intimidate gnomes", icon: "buff" },
@@ -221,6 +231,7 @@ export const FIGHTS: FightScript[] = [
     title: "Reithwin Thorms (Thisobald / Gerringothe / Malus)",
     kind: "hard",
     when: "Before or around Gauntlet",
+    recommendedLevel: "6–8",
     goal: "XP + Surgeon’s Subjugation Amulet from Malus.",
     opener: [
       { who: "tav", label: "Dialogue cheese when offered", icon: "buff" },
@@ -239,6 +250,7 @@ export const FIGHTS: FightScript[] = [
     title: "Yurgir (Gauntlet)",
     kind: "boss",
     when: "Gauntlet of Shar",
+    recommendedLevel: "7–8",
     goal: "Hellfire Hand Crossbow for Astarion.",
     opener: [
       { who: "shadowheart", label: "Hold / debuff", icon: "hold" },
@@ -255,6 +267,7 @@ export const FIGHTS: FightScript[] = [
     title: "Nightsong (Shadowfell) — dark choice",
     kind: "boss",
     when: "End of Gauntlet",
+    recommendedLevel: "7–8",
     goal: "Shadowheart kills Aylin. Spear of Evening.",
     opener: [
       { who: "shadowheart", label: "Dialogue: kill Nightsong", icon: "spirit" },
@@ -270,6 +283,7 @@ export const FIGHTS: FightScript[] = [
     title: "Ketheric Thorm (+ colony)",
     kind: "boss",
     when: "After Nightsong — Moonrise assault",
+    recommendedLevel: "8–9",
     goal: "Multi-phase. Short rest between phases.",
     opener: [
       { who: "shadowheart", label: "Spirit Guardians", icon: "spirit" },
@@ -293,6 +307,7 @@ export const FIGHTS: FightScript[] = [
     title: "Cazador (ascension)",
     kind: "boss",
     when: "Szarr Palace — bring Astarion",
+    recommendedLevel: "10–11",
     goal: "Ascend Astarion + Rhapsody.",
     opener: [
       { who: "shadowheart", label: "SG + daylight plan", icon: "spirit" },
@@ -311,6 +326,7 @@ export const FIGHTS: FightScript[] = [
     title: "Raphael (House of Hope)",
     kind: "boss",
     when: "After looting Hope house",
+    recommendedLevel: "10–12",
     goal: "Helldusk Armour. Hardest single fight on the route.",
     opener: [
       { who: "any", label: "Elixir + Freedom of Movement", icon: "buff" },
@@ -332,6 +348,7 @@ export const FIGHTS: FightScript[] = [
     title: "Gortash",
     kind: "boss",
     when: "After Steel Watch disabled",
+    recommendedLevel: "10–12",
     goal: "Netherstone. Watchers offline = much easier.",
     opener: [
       { who: "shadowheart", label: "SG / control", icon: "spirit" },
@@ -348,6 +365,7 @@ export const FIGHTS: FightScript[] = [
     title: "Orin the Red (Durge climax)",
     kind: "boss",
     when: "Temple of Bhaal after Tribunal",
+    recommendedLevel: "11–12",
     goal: "Netherstone + Bloodthirst / Crimson Mischief. Durge story peak.",
     opener: [
       { who: "tav", label: "Durge face dialogue", icon: "curse" },
@@ -367,6 +385,7 @@ export const FIGHTS: FightScript[] = [
     title: "Netherbrain finale",
     kind: "boss",
     when: "All three stones",
+    recommendedLevel: "12",
     goal: "End the run. Dump everything.",
     opener: [
       { who: "any", label: "Gather allies buffs", icon: "buff" },

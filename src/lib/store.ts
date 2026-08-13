@@ -6,8 +6,9 @@ import {
   type SessionCounts,
   type SessionLap,
   countDone,
+  defaultLapName,
+  defaultSessionName,
   deltaCounts,
-  emptyCounts,
   sessionElapsedMs,
   uid,
 } from "@/lib/session-stats";
@@ -34,9 +35,7 @@ export type ProgressSnapshot = {
   approvalSkip: Record<string, boolean>;
   notes: Record<string, string>;
   longRests: number;
-  /** @deprecated use activeSession */
   sessionStartedAt: number | null;
-  /** @deprecated removed UI */
   compactMode: boolean;
   actFilter: 0 | 1 | 2 | 3;
   activeSession: ActiveSession | null;
@@ -63,19 +62,27 @@ type ProgressState = ProgressSnapshot & {
   setNote: (id: string, text: string) => void;
   incLongRest: () => void;
   decLongRest: () => void;
-  startSession: () => void;
+  startSession: (name?: string) => void;
   pauseSession: () => void;
   resumeSession: () => void;
-  lapSession: () => void;
+  /** Close open segment as a named lap. Optional name override. */
+  lapSession: (name?: string) => void;
   endSession: () => void;
   clearSession: () => void;
   clearSessionHistory: () => void;
+  renameActiveSession: (name: string) => void;
+  setCurrentLapName: (name: string) => void;
+  renameActiveLap: (lapId: string, name: string) => void;
+  deleteActiveLap: (lapId: string) => void;
+  renameSavedSession: (sessionId: string, name: string) => void;
+  deleteSavedSession: (sessionId: string) => void;
+  renameSavedLap: (sessionId: string, lapId: string, name: string) => void;
+  deleteSavedLap: (sessionId: string, lapId: string) => void;
   setCompactMode: (v: boolean) => void;
   resetAll: () => void;
   setActFilter: (act: 0 | 1 | 2 | 3) => void;
   exportSnapshot: () => ProgressSnapshot;
   importSnapshot: (data: Partial<ProgressSnapshot>) => void;
-  /** Live counts for UI */
   currentCounts: () => SessionCounts;
 };
 
@@ -200,6 +207,42 @@ function pairSkip(
   };
 }
 
+/** Normalize older saved sessions missing `name` */
+function normalizeLap(raw: Partial<SessionLap>, i: number): SessionLap {
+  return {
+    id: raw.id ?? uid(),
+    index: raw.index ?? i + 1,
+    name: raw.name?.trim() || defaultLapName(raw.index ?? i + 1),
+    startedAt: raw.startedAt ?? 0,
+    endedAt: raw.endedAt ?? 0,
+    durationMs: raw.durationMs ?? 0,
+    gained: raw.gained ?? {
+      items: 0,
+      walk: 0,
+      levels: 0,
+      longRests: 0,
+    },
+  };
+}
+
+function normalizeSaved(raw: Partial<SavedSession>): SavedSession {
+  const laps = (raw.laps ?? []).map((l, i) => normalizeLap(l, i));
+  return {
+    id: raw.id ?? uid(),
+    name: raw.name?.trim() || defaultSessionName(raw.startedAt ?? Date.now()),
+    startedAt: raw.startedAt ?? Date.now(),
+    endedAt: raw.endedAt ?? Date.now(),
+    durationMs: raw.durationMs ?? 0,
+    gained: raw.gained ?? {
+      items: 0,
+      walk: 0,
+      levels: 0,
+      longRests: 0,
+    },
+    laps,
+  };
+}
+
 export const useProgress = create<ProgressState>()(
   persist(
     (set, get) => ({
@@ -232,16 +275,19 @@ export const useProgress = create<ProgressState>()(
       decLongRest: () =>
         set((s) => ({ longRests: Math.max(0, s.longRests - 1) })),
 
-      startSession: () => {
+      startSession: (name) => {
         const s = get();
+        if (s.activeSession) return;
         const now = Date.now();
         const counts = snapshotCounts(s);
         const active: ActiveSession = {
           id: uid(),
+          name: name?.trim() || defaultSessionName(now),
           startedAt: now,
           pausedAt: null,
           pauseAccumMs: 0,
           lapStartedAt: now,
+          currentLapName: defaultLapName(1),
           baseline: counts,
           lapBaseline: counts,
           laps: [],
@@ -273,21 +319,26 @@ export const useProgress = create<ProgressState>()(
               ...a,
               pausedAt: null,
               pauseAccumMs: a.pauseAccumMs + pausedFor,
-              // shift lap start so lap clock freezes during pause
               lapStartedAt: a.lapStartedAt + pausedFor,
             },
           };
         }),
 
-      lapSession: () =>
+      lapSession: (name) =>
         set((s) => {
           const a = s.activeSession;
           if (!a) return s;
           const now = Date.now();
           const counts = snapshotCounts(s);
+          const idx = a.laps.length + 1;
+          const lapName =
+            name?.trim() ||
+            a.currentLapName?.trim() ||
+            defaultLapName(idx);
           const lap: SessionLap = {
             id: uid(),
-            index: a.laps.length + 1,
+            index: idx,
+            name: lapName,
             startedAt: a.lapStartedAt,
             endedAt: now,
             durationMs: Math.max(0, (a.pausedAt ?? now) - a.lapStartedAt),
@@ -299,6 +350,7 @@ export const useProgress = create<ProgressState>()(
               laps: [...a.laps, lap],
               lapStartedAt: now,
               lapBaseline: counts,
+              currentLapName: defaultLapName(idx + 1),
             },
           };
         }),
@@ -309,18 +361,26 @@ export const useProgress = create<ProgressState>()(
           if (!a) return s;
           const now = Date.now();
           const counts = snapshotCounts(s);
-          // close open lap
-          const finalLap: SessionLap = {
-            id: uid(),
-            index: a.laps.length + 1,
-            startedAt: a.lapStartedAt,
-            endedAt: now,
-            durationMs: Math.max(0, (a.pausedAt ?? now) - a.lapStartedAt),
-            gained: deltaCounts(a.lapBaseline, counts),
-          };
-          const laps = [...a.laps, finalLap];
+          // Only keep segments the user actually created with Lap.
+          // Do not invent a fake final lap for unused-segment sessions.
+          let laps = [...a.laps];
+          if (laps.length > 0) {
+            const idx = laps.length + 1;
+            const finalLap: SessionLap = {
+              id: uid(),
+              index: idx,
+              name:
+                a.currentLapName?.trim() || defaultLapName(idx),
+              startedAt: a.lapStartedAt,
+              endedAt: now,
+              durationMs: Math.max(0, (a.pausedAt ?? now) - a.lapStartedAt),
+              gained: deltaCounts(a.lapBaseline, counts),
+            };
+            laps = [...laps, finalLap];
+          }
           const saved: SavedSession = {
             id: a.id,
+            name: a.name?.trim() || defaultSessionName(a.startedAt),
             startedAt: a.startedAt,
             endedAt: now,
             durationMs: sessionElapsedMs(
@@ -333,7 +393,7 @@ export const useProgress = create<ProgressState>()(
           return {
             activeSession: null,
             sessionStartedAt: null,
-            sessionHistory: [saved, ...s.sessionHistory].slice(0, 30),
+            sessionHistory: [saved, ...s.sessionHistory].slice(0, 40),
           };
         }),
 
@@ -341,6 +401,96 @@ export const useProgress = create<ProgressState>()(
         set({ activeSession: null, sessionStartedAt: null }),
 
       clearSessionHistory: () => set({ sessionHistory: [] }),
+
+      renameActiveSession: (name) =>
+        set((s) => {
+          if (!s.activeSession) return s;
+          return {
+            activeSession: {
+              ...s.activeSession,
+              name: name.trim() || s.activeSession.name,
+            },
+          };
+        }),
+
+      setCurrentLapName: (name) =>
+        set((s) => {
+          if (!s.activeSession) return s;
+          return {
+            activeSession: {
+              ...s.activeSession,
+              currentLapName: name,
+            },
+          };
+        }),
+
+      renameActiveLap: (lapId, name) =>
+        set((s) => {
+          if (!s.activeSession) return s;
+          return {
+            activeSession: {
+              ...s.activeSession,
+              laps: s.activeSession.laps.map((l) =>
+                l.id === lapId
+                  ? { ...l, name: name.trim() || l.name }
+                  : l,
+              ),
+            },
+          };
+        }),
+
+      deleteActiveLap: (lapId) =>
+        set((s) => {
+          if (!s.activeSession) return s;
+          const laps = s.activeSession.laps
+            .filter((l) => l.id !== lapId)
+            .map((l, i) => ({ ...l, index: i + 1 }));
+          return {
+            activeSession: { ...s.activeSession, laps },
+          };
+        }),
+
+      renameSavedSession: (sessionId, name) =>
+        set((s) => ({
+          sessionHistory: s.sessionHistory.map((ses) =>
+            ses.id === sessionId
+              ? { ...ses, name: name.trim() || ses.name }
+              : ses,
+          ),
+        })),
+
+      deleteSavedSession: (sessionId) =>
+        set((s) => ({
+          sessionHistory: s.sessionHistory.filter((ses) => ses.id !== sessionId),
+        })),
+
+      renameSavedLap: (sessionId, lapId, name) =>
+        set((s) => ({
+          sessionHistory: s.sessionHistory.map((ses) => {
+            if (ses.id !== sessionId) return ses;
+            return {
+              ...ses,
+              laps: ses.laps.map((l) =>
+                l.id === lapId
+                  ? { ...l, name: name.trim() || l.name }
+                  : l,
+              ),
+            };
+          }),
+        })),
+
+      deleteSavedLap: (sessionId, lapId) =>
+        set((s) => ({
+          sessionHistory: s.sessionHistory.map((ses) => {
+            if (ses.id !== sessionId) return ses;
+            return {
+              ...ses,
+              laps: ses.laps
+                .filter((l) => l.id !== lapId)
+                .map((l, i) => ({ ...l, index: i + 1 })),
+            };
+          }),
+        })),
 
       setCompactMode: (v) => set({ compactMode: v }),
       resetAll: () =>
@@ -384,8 +534,22 @@ export const useProgress = create<ProgressState>()(
           ...EMPTY,
           ...data,
           version: 4,
-          activeSession: data.activeSession ?? null,
-          sessionHistory: data.sessionHistory ?? s.sessionHistory ?? [],
+          activeSession: data.activeSession
+            ? {
+                ...data.activeSession,
+                name:
+                  data.activeSession.name ||
+                  defaultSessionName(data.activeSession.startedAt),
+                currentLapName:
+                  data.activeSession.currentLapName || defaultLapName(1),
+                laps: (data.activeSession.laps ?? []).map((l, i) =>
+                  normalizeLap(l, i),
+                ),
+              }
+            : null,
+          sessionHistory: (data.sessionHistory ?? s.sessionHistory ?? []).map(
+            normalizeSaved,
+          ),
         })),
     }),
     {
@@ -397,8 +561,20 @@ export const useProgress = create<ProgressState>()(
           ...EMPTY,
           ...p,
           version: 4,
-          activeSession: p.activeSession ?? null,
-          sessionHistory: p.sessionHistory ?? [],
+          activeSession: p.activeSession
+            ? {
+                ...p.activeSession,
+                name:
+                  p.activeSession.name ||
+                  defaultSessionName(p.activeSession.startedAt),
+                currentLapName:
+                  p.activeSession.currentLapName || defaultLapName(1),
+                laps: (p.activeSession.laps ?? []).map((l, i) =>
+                  normalizeLap(l, i),
+                ),
+              }
+            : null,
+          sessionHistory: (p.sessionHistory ?? []).map(normalizeSaved),
         };
       },
     },
