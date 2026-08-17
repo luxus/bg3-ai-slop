@@ -278,7 +278,7 @@ export const ITEMS: GearItem[] = [
     name: "Shadow of Menzoberranzan",
     slot: "Head",
     who: ["astarion"],
-    where: "Underdark — Myconid / decrepit village gilded chest",
+    where: "Myconid treasure room after killing beach duergar (~X:52 Y:−70, Pale Corpse)",
     why: "Bonus-action invisibility. Hide/shoot engine for Astarion.",
     priority: "strong",
     sourceUrl: "https://bg3.wiki/wiki/Shadow_of_Menzoberranzan",

@@ -152,6 +152,29 @@ export const FIGHTS: FightScript[] = [
     gear: ["Antidotes / poison cleanse if needed"],
   },
   {
+    id: "f-spectator",
+    act: 1,
+    title: "Spectator (petrified drow)",
+    kind: "hard",
+    when: "Underdark west of Myconids — if you still need level 5",
+    recommendedLevel: "4–5",
+    goal: "Kill the eye first. High XP. Skip the frost-staff bits.",
+    opener: [
+      { who: "any", label: "Spread out — no clump (rays)", icon: "shove" },
+      { who: "tav", label: "Curse Spectator + Eldritch Blast", icon: "blast" },
+      { who: "astarion", label: "All In if you can hide", icon: "shot" },
+      { who: "laezel", label: "Rush the Spectator only", icon: "blade" },
+    ],
+    mid: [
+      { who: "shadowheart", label: "Bless / Healing Word downed", icon: "heal" },
+      { who: "any", label: "Ignore unpetrified drow until the eye is dead", icon: "surge" },
+    ],
+    finish:
+      "On Balanced this is fine at 4–5 if you focus the Spectator. Harder than minotaurs, much easier than Bulette. If two people get ray-locked, disengage and leave.",
+    optional: true,
+    gear: ["Night Walkers if you already have them — Misty Step out of rays"],
+  },
+  {
     id: "f-grym",
     act: 1,
     title: "Grym (Adamantine Forge)",
